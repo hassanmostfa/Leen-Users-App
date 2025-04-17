@@ -15,6 +15,7 @@ import BookingDetails from './screens/bookings/BookingDetails';
 import PaymentMethods from './screens/bookings/PaymentMethods';
 import Reels from './screens/Reels';
 import Receipt from './screens/bookings/Receipt';
+import Profile from './screens/Profile';
 import Toast from 'react-native-toast-message';
 import { View, Text, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -109,6 +110,7 @@ export default function App() {
           <Stack.Screen name="PaymentMethods" component={PaymentMethods} />
           <Stack.Screen name="Receipt" component={Receipt} />
           <Stack.Screen name="Reels" component={Reels} />
+          <Stack.Screen name="Profile" component={Profile} />
         </Stack.Navigator>
       </NavigationContainer>
       <Toast config={toastConfig} />
