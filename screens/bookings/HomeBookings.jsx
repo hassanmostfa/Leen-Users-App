@@ -5,9 +5,9 @@ import { useGetHomeBookingsQuery } from '../../API/shared/BookHomeService'
 import CancelBookingModal from '../../components/bookings/CancelBookingModal';
 
 const HomeBookings = ({ navigation }) => {
-  const { data, isLoading, isError, error } = useGetHomeBookingsQuery();
+  const { data, isLoading, isError, error, refetch } = useGetHomeBookingsQuery();
   const [allBookings, setAllBookings] = useState([]);
-  const [activeFilter, setActiveFilter] = useState('pending'); // Default filter
+  const [activeFilter, setActiveFilter] = useState('pending');
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState(null);
 
@@ -17,7 +17,6 @@ const HomeBookings = ({ navigation }) => {
     }
   }, [data]);
 
-  // Format the date in Arabic locale
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('ar-SA', {
@@ -28,7 +27,6 @@ const HomeBookings = ({ navigation }) => {
     });
   };
 
-  // Format the time in Arabic (e.g., 10 صباحًا)
   const formatTime = (time) => {
     if (!time) return '';
     const [hour, minute] = time.split(':');
@@ -40,7 +38,6 @@ const HomeBookings = ({ navigation }) => {
     }
   };
 
-  // Calculate total price including additional services
   const calculateTotalPrice = (booking) => {
     let total = parseFloat(booking.home_service.price) || 0;
     
@@ -50,14 +47,12 @@ const HomeBookings = ({ navigation }) => {
       });
     }
     
-    // Apply discounts if any
     const copounDiscount = parseFloat(booking.copoun_discount) || 0;
     const serviceDiscount = parseFloat(booking.service_discount) || 0;
     
     return total - copounDiscount - serviceDiscount;
   };
 
-  // Filter bookings based on active filter
   const filteredBookings = allBookings.filter(booking => {
     if (activeFilter === 'completed') return booking.booking_status === 'done';
     if (activeFilter === 'pending') return booking.booking_status === 'pending';
@@ -68,48 +63,49 @@ const HomeBookings = ({ navigation }) => {
   const handleShowReceipt = (bookingId) => {
     const booking = allBookings.find(item => item.id === bookingId);
     if (booking) {
-      // Ensure numeric values and provide defaults
-      const paidAmount = parseFloat(booking.paid_amount) || 0;
-      const couponDiscount = parseFloat(booking.copoun_discount) || 0;
-      const serviceDiscount = parseFloat(booking.service_discount) || 0;
-      const servicePrice = parseFloat(booking.home_service.price) || 0;
-  
-      navigation.navigate('Receipt', {
-        bookingData: {
-          data: {
-            ...booking,
-            id: booking.id,
-            date: booking.date,
-            start_time: booking.start_time,
-            paid_amount: paidAmount, // Ensure this is a number
-            copoun_discount: couponDiscount,
-            service_discount: serviceDiscount,
-            seller: {
-              ...booking.seller,
-              first_name: booking.seller.first_name,
-              last_name: booking.seller.last_name,
-            },
-            customer: {
-              ...booking.customer,
-              first_name: booking.customer.first_name,
-              last_name: booking.customer.last_name,
-              phone: booking.customer.phone,
-            },
-            employee: {
-              ...booking.employee,
-              name: booking.employee?.name || 'غير محدد',
-            },
-            home_service: {
-              ...booking.home_service,
-              name: booking.home_service.name,
-              price: servicePrice,
-              percentage: parseFloat(booking.home_service.percentage) || 0,
-            },
+      const receiptData = {
+        data: {
+          ...booking,
+          id: booking.id,
+          date: booking.date,
+          start_time: booking.start_time,
+          paid_amount: parseFloat(booking.paid_amount) || 0,
+          copoun_discount: parseFloat(booking.copoun_discount) || 0,
+          service_discount: parseFloat(booking.service_discount) || 0,
+          seller: {
+            ...booking.seller,
+            first_name: booking.seller.first_name,
+            last_name: booking.seller.last_name,
           },
-          couponDiscountAmount: couponDiscount,
-          totalPrice: calculateTotalPrice(booking),
-          service_type: 'home',
-        }
+          customer: {
+            ...booking.customer,
+            first_name: booking.customer.first_name,
+            last_name: booking.customer.last_name,
+            phone: booking.customer.phone,
+          },
+          employee: {
+            ...booking.employee,
+            name: booking.employee?.name || 'غير محدد',
+          },
+          home_service: {
+            ...booking.home_service,
+            name: booking.home_service.name,
+            price: parseFloat(booking.home_service.price) || 0,
+            percentage: parseFloat(booking.home_service.percentage) || 0,
+          },
+        },
+        couponDiscountAmount: parseFloat(booking.copoun_discount) || 0,
+        totalPrice: calculateTotalPrice(booking),
+        service_type: 'home',
+        additionalServices: booking.additionalHomeServiceBookingItems?.map(item => ({
+          name: item.service.name,
+          price: item.service.price,
+        })) || [],
+      };
+
+      navigation.navigate('Receipt', { 
+        bookingData: receiptData,
+        service_type: 'home' 
       });
     }
   };
@@ -119,11 +115,11 @@ const HomeBookings = ({ navigation }) => {
     setIsModalVisible(true);
   };
 
-  const handleConfirmCancel = () => {
-    console.log('Canceling booking:', selectedBookingId);
-    // Here you would typically call an API to cancel the booking
-    setIsModalVisible(false);
-    setSelectedBookingId(null);
+  const handleRateService = (booking) => {
+    navigation.navigate('RateService', {
+      serviceId: booking.home_service.id,
+      serviceType: 'home',
+    });
   };
 
   if (isLoading) {
@@ -146,7 +142,6 @@ const HomeBookings = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
       
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Icon name="arrow-left" size={24} color="#000000" />
@@ -154,10 +149,8 @@ const HomeBookings = ({ navigation }) => {
         <Text style={styles.headerTitle}>الحجوزات المنزلية</Text>
       </View>
 
-      {/* Separator Line */}
       <View style={styles.separator} />
 
-      {/* Filter Links */}
       <View style={styles.filterContainer}>
         <TouchableOpacity 
           style={[styles.filterButton, activeFilter === 'pending' && styles.activeFilter]}
@@ -181,27 +174,23 @@ const HomeBookings = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Bookings List */}
       <FlatList
         data={filteredBookings}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <View style={styles.bookingCard}>
-            {/* Cancelled Badge */}
             {item.booking_status === 'cancelled' && (
               <View style={styles.cancelledBadge}>
                 <Text style={styles.cancelledBadgeText}>ملغي</Text>
               </View>
             )}
             
-            {/* Rejection Reason */}
             {item.request_rejection_reason && (
               <View style={styles.rejectionReasonContainer}>
                 <Text style={styles.rejectionReasonText}>سبب الرفض: {item.request_rejection_reason}</Text>
               </View>
             )}
             
-            {/* Date and Time */}
             <View style={styles.dateTimeContainer}>
               <View style={styles.dateTimeBox}>
                 <Text style={styles.dateText}>{formatDate(item.date)}</Text>
@@ -212,7 +201,6 @@ const HomeBookings = ({ navigation }) => {
               </View>
             </View>
             
-            {/* Seller Info */}
             <View style={styles.sellerContainer}>
               <Image 
                 source={{ uri: `https://leen-app.com/public/${item.seller.seller_logo}` }} 
@@ -227,7 +215,6 @@ const HomeBookings = ({ navigation }) => {
                     {item.location || item.seller.location}
                   </Text>
                 </View>
-                {/* Main Service Info */}
                 <View style={styles.serviceContainer}>
                   <Text style={styles.serviceName}>{item.home_service.name}</Text>
                 </View>
@@ -235,15 +222,14 @@ const HomeBookings = ({ navigation }) => {
               </View>
             </View>
 
-            {/* Additional Services */}
             {item.additionalHomeServiceBookingItems?.length > 0 && (
               <View style={styles.additionalServicesContainer}>
                 <Text style={styles.additionalServicesTitle}>خدمات إضافية:</Text>
                 {item.additionalHomeServiceBookingItems.map((additionalItem, index) => (
                   <View key={index} style={styles.additionalServiceItem}>
                     <View style={styles.additionalServiceInfo}>
-                      <Text style={styles.additionalServiceName}>{additionalItem.service.name}</Text>
                       <Icon name="plus" size={16} color="#435E58" />
+                      <Text style={styles.additionalServiceName}>{additionalItem.service.name}</Text>
                     </View>
                     <Text style={styles.additionalServicePrice}>{additionalItem.service.price} ر.س</Text>
                   </View>
@@ -251,7 +237,6 @@ const HomeBookings = ({ navigation }) => {
               </View>
             )}
 
-            {/* Action Buttons */}
             <View style={styles.buttonContainer}>
               {item.booking_status === 'pending' && (
                 <>
@@ -271,13 +256,28 @@ const HomeBookings = ({ navigation }) => {
                 </>
               )}
 
-              {(item.booking_status === 'done' ) && (
-                <TouchableOpacity 
-                  style={[styles.actionButton, styles.receiptButton, { flex: 1 }]}
-                  onPress={() => handleShowReceipt(item.id)}
-                >
-                  <Text style={styles.buttonText}>عرض الإيصال</Text>
-                </TouchableOpacity>
+              {item.booking_status === 'done' && (
+                <>
+                  <TouchableOpacity 
+                    style={[styles.actionButton, styles.rateButton]}
+                    onPress={() => handleRateService(item)}
+                  >
+                    <Text style={styles.rateButtonText}>تقييم الخدمة</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity 
+                    style={[styles.actionButton, styles.receiptButton]}
+                    onPress={() => handleShowReceipt(item.id)}
+                  >
+                    <Text style={styles.buttonText}>عرض الإيصال</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+
+              {item.booking_status === 'cancelled' && (
+                <View style={styles.cancelledStatusContainer}>
+                  <Text style={styles.cancelledStatusText}>تم إلغاء هذه الحجز</Text>
+                </View>
               )}
             </View>
           </View>
@@ -290,11 +290,12 @@ const HomeBookings = ({ navigation }) => {
         }
       />
 
-      {/* Cancel Booking Modal */}
       <CancelBookingModal
         visible={isModalVisible}
         onClose={() => setIsModalVisible(false)}
-        onConfirm={handleConfirmCancel}
+        bookingId={selectedBookingId}
+        navigation={navigation}
+        serviceType="home"
       />
     </SafeAreaView>
   )
@@ -458,18 +459,6 @@ const styles = StyleSheet.create({
     color: '#435E58',
     flex: 1,
   },
-  servicePrice: {
-    fontSize: 15,
-    fontFamily: 'AlmaraiBold',
-    color: '#435E58',
-    marginLeft: 10,
-  },
-  serviceDetails: {
-    fontSize: 13,
-    fontFamily: 'AlmaraiRegular',
-    color: '#666',
-    marginBottom: 8,
-  },
   employeeText: {
     fontSize: 14,
     fontFamily: 'AlmaraiRegular',
@@ -507,38 +496,10 @@ const styles = StyleSheet.create({
     fontFamily: 'AlmaraiBold',
     color: '#435E58',
   },
-  totalPriceContainer: {
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 10,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-  },
-  totalPriceText: {
-    fontSize: 16,
-    fontFamily: 'AlmaraiBold',
-    color: '#333',
-  },
-  totalPriceAmount: {
-    fontSize: 16,
-    fontFamily: 'AlmaraiBold',
-    color: '#435E58',
-  },
-  discountsContainer: {
-    marginTop: 5,
-  },
-  discountText: {
-    fontSize: 14,
-    fontFamily: 'AlmaraiRegular',
-    color: '#666',
-    textAlign: 'right',
-  },
   buttonContainer: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     gap: 10,
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     marginTop: 15,
   },
   actionButton: {
@@ -547,6 +508,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    minWidth: '48%',
   },
   receiptButton: {
     backgroundColor: '#435E58',
@@ -555,6 +517,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#435E58',
   },
+  rateButton: {
+    backgroundColor: '#fff',
+    borderWidth: 2,
+    borderColor: '#435E58',
+  },
+  rateButtonText: {
+    color: '#435E58',
+    fontFamily: 'AlmaraiBold',
+    fontSize: 14,
+  },
   buttonText: {
     color: '#fff',
     fontFamily: 'AlmaraiBold',
@@ -562,6 +534,17 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     color: '#435E58',
+    fontFamily: 'AlmaraiBold',
+    fontSize: 14,
+  },
+  cancelledStatusContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+  },
+  cancelledStatusText: {
+    color: '#F44336',
     fontFamily: 'AlmaraiBold',
     fontSize: 14,
   },

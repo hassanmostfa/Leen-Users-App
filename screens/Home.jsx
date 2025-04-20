@@ -3,7 +3,7 @@ import React from 'react';
 import TapNavigation from '../components/TapNavigation';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import avatar from '../assets/images/avatars/avatar02.jpg';
+import avatar from '../assets/user.png';
 import offerImg from '../assets/Offer.png';
 import offer2Img from '../assets/offer2.png';
 import { useGetCustomerInfoQuery } from '../API/shared/Customer';

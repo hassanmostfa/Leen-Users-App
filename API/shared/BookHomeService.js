@@ -5,16 +5,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const baseUrl = 'https://leen-app.com/public/api';
 
 // Create an API service using RTK Query
-// Extend your existing API service
 export const bookHomeServiceApiService = createApi({
   reducerPath: 'bookHomeServiceApiService',
   baseQuery: fetchBaseQuery({
     baseUrl,
     prepareHeaders: async (headers) => {
       try {
-        const token = await AsyncStorage.getItem('authToken'); // Get authToken from AsyncStorage
+        const token = await AsyncStorage.getItem('authToken');
         if (token) {
           headers.set('Authorization', `Bearer ${token}`);
+          console.log('RTK Query auth token is : ', token);
         } else {
           console.warn('No auth token found in AsyncStorage');
         }
@@ -28,16 +28,24 @@ export const bookHomeServiceApiService = createApi({
     // Book Home Service
     bookHomeService: builder.mutation({
       query: (bookingData) => ({
-        url: `/customer/homeServices/book`,
+        url: '/customer/homeServices/book',
         method: 'POST',
         body: bookingData,
+      }),
+    }),
+
+    // Cancel Home Booking
+    cancelHomeBooking: builder.mutation({
+      query: (bookingId) => ({
+        url: `/customer/cancel/homeBooking/${bookingId}`,
+        method: 'PUT',
       }),
     }),
 
     // Get All Home Bookings
     getHomeBookings: builder.query({
       query: () => ({
-        url: `/customer/homeServices/bookings`,
+        url: '/customer/homeServices/bookings',
         method: 'GET',
       }),
     }),
@@ -47,5 +55,6 @@ export const bookHomeServiceApiService = createApi({
 // Export auto-generated hooks
 export const {
   useBookHomeServiceMutation,
+  useCancelHomeBookingMutation,
   useGetHomeBookingsQuery,
 } = bookHomeServiceApiService;

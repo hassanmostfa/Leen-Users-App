@@ -213,13 +213,13 @@ const styles = StyleSheet.create({
   linksContainer: {
     flexDirection: 'row',
     marginTop: 20,
-    marginBottom: 20,
     paddingHorizontal: 10, // Add padding to prevent links from touching the edges
   },
   linkButton: {
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 20,
+    height: 45,
   },
   activeLinkButton: {
     backgroundColor: '#435E58', // Green background for active link
@@ -236,7 +236,6 @@ const styles = StyleSheet.create({
   },
   componentContainer: {
     height: 400,
-    marginTop: 10, // Space between links and component content
     borderRadius: 10,
   },
   scrollView: {

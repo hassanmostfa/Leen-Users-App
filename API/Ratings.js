@@ -1,17 +1,15 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Define the API base URL
 const baseUrl = 'https://leen-app.com/public/api';
 
-// Create an API service using RTK Query
 export const ratingsApiService = createApi({
   reducerPath: 'ratingsApiService',
   baseQuery: fetchBaseQuery({
     baseUrl,
     prepareHeaders: async (headers) => {
       try {
-        const token = await AsyncStorage.getItem('authToken'); // Get authToken from AsyncStorage
+        const token = await AsyncStorage.getItem('authToken');
         if (token) {
           headers.set('Authorization', `Bearer ${token}`);
         }
@@ -22,12 +20,20 @@ export const ratingsApiService = createApi({
     },
   }),
   endpoints: (builder) => ({
-    // Fetch Salon Ratings and Reviews for a Seller
+    // GET: Fetch all ratings for a seller
     getAllRatings: builder.query({
       query: (seller_id) => `/customer/seller/rating/${seller_id}`,
+    }),
+
+    // POST: Rate a service
+    rateService: builder.mutation({
+      query: (ratingData) => ({
+        url: '/customer/rate/service', // adjust the endpoint as needed
+        method: 'POST',
+        body: ratingData,
+      }),
     }),
   }),
 });
 
-// Export auto-generated hooks
-export const { useGetAllRatingsQuery } = ratingsApiService;
+export const { useGetAllRatingsQuery, useRateServiceMutation } = ratingsApiService;

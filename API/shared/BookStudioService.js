@@ -33,6 +33,14 @@ export const bookStudioServiceApiService = createApi({
       }),
     }),
 
+        // Cancel Home Booking
+        cancelStudioBooking: builder.mutation({
+          query: (bookingId) => ({
+            url: `/customer/cancel/studioBooking/${bookingId}`,
+            method: 'PUT',
+          }),
+        }),
+
     // Get All Studio Bookings
     getStudioBookings: builder.query({
       query: () => ({
@@ -46,5 +54,6 @@ export const bookStudioServiceApiService = createApi({
 // Export auto-generated hooks
 export const {
   useBookStudioServiceMutation,
+  useCancelStudioBookingMutation,
   useGetStudioBookingsQuery,
 } = bookStudioServiceApiService;

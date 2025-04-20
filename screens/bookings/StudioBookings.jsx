@@ -5,9 +5,9 @@ import { useGetStudioBookingsQuery } from '../../API/shared/BookStudioService'
 import CancelBookingModal from '../../components/bookings/CancelBookingModal';
 
 const StudioBookings = ({ navigation }) => {
-  const { data, isLoading, isError, error } = useGetStudioBookingsQuery();
+  const { data, isLoading, isError, error, refetch } = useGetStudioBookingsQuery();
   const [allBookings, setAllBookings] = useState([]);
-  const [activeFilter, setActiveFilter] = useState('pending'); // Default filter
+  const [activeFilter, setActiveFilter] = useState('pending');
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState(null);
 
@@ -17,7 +17,6 @@ const StudioBookings = ({ navigation }) => {
     }
   }, [data]);
 
-  // Format the date in Arabic locale
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('ar-SA', {
@@ -28,7 +27,6 @@ const StudioBookings = ({ navigation }) => {
     });
   };
 
-  // Format the time in Arabic (e.g., 10 صباحًا)
   const formatTime = (time) => {
     if (!time) return '';
     const [hour, minute] = time.split(':');
@@ -40,7 +38,6 @@ const StudioBookings = ({ navigation }) => {
     }
   };
 
-  // Parse JSON strings in service details and employees
   const parseServiceDetails = (details) => {
     try {
       if (typeof details === 'string') {
@@ -52,7 +49,6 @@ const StudioBookings = ({ navigation }) => {
     }
   };
 
-  // Calculate total price including additional services
   const calculateTotalPrice = (booking) => {
     let total = parseFloat(booking.studio_service.price) || 0;
     
@@ -62,14 +58,12 @@ const StudioBookings = ({ navigation }) => {
       });
     }
     
-    // Apply discounts if any
     const copounDiscount = parseFloat(booking.copoun_discount) || 0;
     const serviceDiscount = parseFloat(booking.service_discount) || 0;
     
     return total - copounDiscount - serviceDiscount;
   };
 
-  // Filter bookings based on active filter
   const filteredBookings = allBookings.filter(booking => {
     if (activeFilter === 'completed') return booking.booking_status === 'done';
     if (activeFilter === 'pending') return booking.booking_status === 'pending';
@@ -80,7 +74,6 @@ const StudioBookings = ({ navigation }) => {
   const handleShowReceipt = (bookingId) => {
     const booking = allBookings.find(item => item.id === bookingId);
     if (booking) {
-      // Prepare the receipt data structure
       const receiptData = {
         data: {
           ...booking,
@@ -112,11 +105,9 @@ const StudioBookings = ({ navigation }) => {
             percentage: parseFloat(booking.studio_service.percentage) || 0,
           },
         },
-        // Additional data needed for receipt calculations
         couponDiscountAmount: parseFloat(booking.copoun_discount) || 0,
         totalPrice: calculateTotalPrice(booking),
         service_type: 'studio',
-        // Include additional services if any
         additionalServices: booking.additionalStudioServiceBookingItems?.map(item => ({
           name: item.service.name,
           price: item.service.price,
@@ -135,11 +126,11 @@ const StudioBookings = ({ navigation }) => {
     setIsModalVisible(true);
   };
 
-  const handleConfirmCancel = () => {
-    console.log('Canceling booking:', selectedBookingId);
-    // Here you would typically call an API to cancel the booking
-    setIsModalVisible(false);
-    setSelectedBookingId(null);
+  const handleRateService = (booking) => {
+    navigation.navigate('RateService', {
+      serviceId: booking.studio_service.id,
+      serviceType: 'studio',
+    });
   };
 
   if (isLoading) {
@@ -162,7 +153,6 @@ const StudioBookings = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
       
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Icon name="arrow-left" size={24} color="#000000" />
@@ -170,10 +160,8 @@ const StudioBookings = ({ navigation }) => {
         <Text style={styles.headerTitle}>حجوزات المقر</Text>
       </View>
 
-      {/* Separator Line */}
       <View style={styles.separator} />
 
-      {/* Filter Links */}
       <View style={styles.filterContainer}>
         <TouchableOpacity 
           style={[styles.filterButton, activeFilter === 'pending' && styles.activeFilter]}
@@ -197,27 +185,23 @@ const StudioBookings = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Bookings List */}
       <FlatList
         data={filteredBookings}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <View style={styles.bookingCard}>
-            {/* Cancelled Badge */}
             {item.booking_status === 'cancelled' && (
               <View style={styles.cancelledBadge}>
                 <Text style={styles.cancelledBadgeText}>ملغي</Text>
               </View>
             )}
             
-            {/* Rejection Reason */}
             {item.request_rejection_reason && (
               <View style={styles.rejectionReasonContainer}>
                 <Text style={styles.rejectionReasonText}>سبب الرفض: {item.request_rejection_reason}</Text>
               </View>
             )}
             
-            {/* Date and Time */}
             <View style={styles.dateTimeContainer}>
               <View style={styles.dateTimeBox}>
                 <Text style={styles.dateText}>{formatDate(item.date)}</Text>
@@ -228,7 +212,6 @@ const StudioBookings = ({ navigation }) => {
               </View>
             </View>
             
-            {/* Seller Info */}
             <View style={styles.sellerContainer}>
               <Image 
                 source={{ uri: `https://leen-app.com/public/${item.seller.seller_logo}` }} 
@@ -243,7 +226,6 @@ const StudioBookings = ({ navigation }) => {
                     {item.seller.location}
                   </Text>
                 </View>
-                {/* Main Service Info */}
                 <View style={styles.serviceContainer}>
                   <Text style={styles.serviceName}>{item.studio_service.name}</Text>
                 </View>
@@ -251,7 +233,6 @@ const StudioBookings = ({ navigation }) => {
               </View>
             </View>
 
-            {/* Additional Services */}
             {item.additionalStudioServiceBookingItems?.length > 0 && (
               <View style={styles.additionalServicesContainer}>
                 <Text style={styles.additionalServicesTitle}>خدمات إضافية:</Text>
@@ -267,7 +248,6 @@ const StudioBookings = ({ navigation }) => {
               </View>
             )}
 
-            {/* Action Buttons */}
             <View style={styles.buttonContainer}>
               {item.booking_status === 'pending' && (
                 <>
@@ -287,13 +267,28 @@ const StudioBookings = ({ navigation }) => {
                 </>
               )}
 
-              {(item.booking_status === 'done' || item.booking_status === 'cancelled') && (
-                <TouchableOpacity 
-                  style={[styles.actionButton, styles.receiptButton, { flex: 1 }]}
-                  onPress={() => handleShowReceipt(item.id)}
-                >
-                  <Text style={styles.buttonText}>عرض الإيصال</Text>
-                </TouchableOpacity>
+              {item.booking_status === 'done' && (
+                <>
+                  <TouchableOpacity 
+                    style={[styles.actionButton, styles.rateButton]}
+                    onPress={() => handleRateService(item)}
+                  >
+                    <Text style={styles.rateButtonText}>تقييم الخدمة</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity 
+                    style={[styles.actionButton, styles.receiptButton]}
+                    onPress={() => handleShowReceipt(item.id)}
+                  >
+                    <Text style={styles.buttonText}>عرض الإيصال</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+
+              {item.booking_status === 'cancelled' && (
+                <View style={styles.cancelledStatusContainer}>
+                  <Text style={styles.cancelledStatusText}>تم إلغاء هذه الحجز</Text>
+                </View>
               )}
             </View>
           </View>
@@ -306,17 +301,15 @@ const StudioBookings = ({ navigation }) => {
         }
       />
 
-      {/* Cancel Booking Modal */}
       <CancelBookingModal
         visible={isModalVisible}
         onClose={() => setIsModalVisible(false)}
-        onConfirm={handleConfirmCancel}
+        bookingId={selectedBookingId}
+        navigation={navigation}
       />
     </SafeAreaView>
   )
 }
-
-export default StudioBookings
 
 const styles = StyleSheet.create({
   container: {
@@ -474,18 +467,6 @@ const styles = StyleSheet.create({
     color: '#435E58',
     flex: 1,
   },
-  servicePrice: {
-    fontSize: 15,
-    fontFamily: 'AlmaraiBold',
-    color: '#435E58',
-    marginLeft: 10,
-  },
-  serviceDetails: {
-    fontSize: 13,
-    fontFamily: 'AlmaraiRegular',
-    color: '#666',
-    marginBottom: 8,
-  },
   employeeText: {
     fontSize: 14,
     fontFamily: 'AlmaraiRegular',
@@ -523,38 +504,10 @@ const styles = StyleSheet.create({
     fontFamily: 'AlmaraiBold',
     color: '#435E58',
   },
-  totalPriceContainer: {
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 10,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-  },
-  totalPriceText: {
-    fontSize: 16,
-    fontFamily: 'AlmaraiBold',
-    color: '#333',
-  },
-  totalPriceAmount: {
-    fontSize: 16,
-    fontFamily: 'AlmaraiBold',
-    color: '#435E58',
-  },
-  discountsContainer: {
-    marginTop: 5,
-  },
-  discountText: {
-    fontSize: 14,
-    fontFamily: 'AlmaraiRegular',
-    color: '#666',
-    textAlign: 'right',
-  },
   buttonContainer: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     gap: 10,
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     marginTop: 15,
   },
   actionButton: {
@@ -563,6 +516,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    minWidth: '48%',
   },
   receiptButton: {
     backgroundColor: '#435E58',
@@ -571,6 +525,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#435E58',
   },
+  rateButton: {
+    backgroundColor: '#fff',
+    borderWidth: 2,
+    borderColor: '#435E58',
+  },
+  rateButtonText: {
+    color: '#435E58',
+    fontFamily: 'AlmaraiBold',
+    fontSize: 14,
+  },
   buttonText: {
     color: '#fff',
     fontFamily: 'AlmaraiBold',
@@ -578,6 +542,17 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     color: '#435E58',
+    fontFamily: 'AlmaraiBold',
+    fontSize: 14,
+  },
+  cancelledStatusContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+  },
+  cancelledStatusText: {
+    color: '#F44336',
     fontFamily: 'AlmaraiBold',
     fontSize: 14,
   },
@@ -606,3 +581,5 @@ const styles = StyleSheet.create({
     color: '#666',
   },
 });
+
+export default StudioBookings;

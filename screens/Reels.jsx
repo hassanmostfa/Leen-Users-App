@@ -9,13 +9,27 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const { height, width } = Dimensions.get('window');
 
 const Reels = ({ navigation }) => {
-  const { data } = useGetAllReelsQuery();
+  const { data: reelsData } = useGetAllReelsQuery();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isBuffering, setIsBuffering] = useState(false);
   const flatListRef = useRef(null);
   const videoRefs = useRef([]);
   const insets = useSafeAreaInsets();
-  
+
+  const handleSellerPress = (seller) => {
+    navigation.navigate('ShowSellerInfo', { 
+      item: {
+        id: seller.id,
+        first_name: seller.first_name,
+        last_name: seller.last_name,
+        seller_logo: seller.seller_logo,
+        location: seller.location,
+        average_rating: seller.average_rating,
+        seller_banner: seller.seller_banner
+      }
+    });
+  };
+
   const onViewableItemsChanged = useRef(({ viewableItems }) => {
     if (viewableItems.length > 0) {
       const newIndex = viewableItems[0].index || 0;
@@ -61,13 +75,33 @@ const Reels = ({ navigation }) => {
       </TouchableOpacity>
       
       <View style={styles.bottomContainer}>
-        <View style={styles.sellerInfo}>
-          <Image source={ManImg} style={styles.sellerImage} />
-          <Text style={styles.sellerName}>Seller {item.seller_id}</Text>
-        </View>
-        <Text style={styles.description}>
-          {item.description || 'No description'}
-        </Text>
+        <TouchableOpacity 
+          style={styles.sellerInfo}
+          onPress={() => handleSellerPress(item.seller)}
+        >
+          <Image 
+            source={item.seller.seller_logo 
+              ? { uri: `https://leen-app.com/public/${item.seller.seller_logo}` } 
+              : ManImg} 
+            style={styles.sellerImage} 
+          />
+          <View>
+            <Text style={styles.sellerName}>
+              {item.seller.first_name} {item.seller.last_name}
+            </Text>
+            <View style={styles.ratingContainer}>
+              <Icon name="star" size={16} color="#F98600" />
+              <Text style={styles.ratingText}>
+                {item.seller.average_rating.toFixed(1)}
+              </Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+        {item.description && (
+          <Text style={styles.description}>
+            {item.description}
+          </Text>
+        )}
       </View>
     </View>
   );
@@ -79,10 +113,10 @@ const Reels = ({ navigation }) => {
         translucent 
         backgroundColor="transparent" 
       />
-      {data?.data ? (
+      {reelsData?.data ? (
         <FlatList
           ref={flatListRef}
-          data={data.data}
+          data={reelsData.data}
           renderItem={renderItem}
           keyExtractor={item => item.id.toString()}
           pagingEnabled
@@ -144,10 +178,10 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   sellerImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 10,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 15,
     borderWidth: 2,
     borderColor: 'white',
   },
@@ -155,11 +189,23 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+    marginBottom: 3,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  ratingText: {
+    color: 'white',
+    fontSize: 14,
+    marginLeft: 5,
   },
   description: {
     color: 'white',
     fontSize: 14,
     padding: 10,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    borderRadius: 8,
   },
   loadingText: {
     color: 'white',
