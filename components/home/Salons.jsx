@@ -124,7 +124,8 @@ export default Salons;
 const styles = StyleSheet.create({
   salonSection: {
     paddingHorizontal: 15,
-    marginVertical: 20,
+    marginTop: 20,
+    marginBottom: 50,
   },
   salonTitle: {
     fontSize: 16,

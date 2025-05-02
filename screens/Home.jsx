@@ -40,9 +40,9 @@ const Home = () => {
       <Search />
 
       {/* Offer Section */}
-      <View style={styles.offerSection}>
+      {/* <View style={styles.offerSection}>
         <Image source={offerImg} style={styles.offerImage} />
-      </View>
+      </View> */}
 
       {/* SubCategories Section */}
       <SubCategories />
@@ -51,10 +51,10 @@ const Home = () => {
     <Salons navigation={navigation} />
 
     {/* Offer 2 Section */}
-    <View style={styles.offerSection}>
+    {/* <View style={styles.offerSection}>
     <Text style={styles.subCategoriesTitle}>افضل العروض</Text>
         <Image source={offer2Img} style={styles.offerImage} />
-    </View>
+    </View> */}
       </ScrollView>
 
       {/* Navigation Tabs */}
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     padding: 7,
   },
 
-  offerSection: {alignItems: 'center',marginTop: 15,},
+  offerSection: {alignItems: 'center',marginVertical: 15,},
 
   offerImage: {height: 150,borderRadius: 15,resizeMode: 'contain',},
 });

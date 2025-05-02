@@ -11,6 +11,7 @@ import { bookHomeServiceApiService } from '../API/shared/BookHomeService';
 import { couponsApiService } from '../API/Coupon';
 import { ratingsApiService } from '../API/Ratings';
 import { reelsApiService } from '../API/Reels';
+import { chatSellersApiService } from '../API/chat';
 const store = configureStore({
   reducer: {
     [apiService.reducerPath]: apiService.reducer, // Register RTK Query reducer for API service
@@ -25,6 +26,7 @@ const store = configureStore({
     [couponsApiService.reducerPath]: couponsApiService.reducer,
     [ratingsApiService.reducerPath]: ratingsApiService.reducer,
     [reelsApiService.reducerPath]: reelsApiService.reducer,
+    [chatSellersApiService.reducerPath]: chatSellersApiService.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -40,6 +42,7 @@ const store = configureStore({
       couponsApiService.middleware,
       ratingsApiService.middleware,
       reelsApiService.middleware,
+      chatSellersApiService.middleware,
     ), // Add middleware for RTK Query
 });
 

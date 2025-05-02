@@ -19,6 +19,8 @@ import Profile from './screens/Profile';
 import RateService from './screens/RateService';
 import Thanks from './screens/ThankYou';
 import Notifications from './screens/Notifications';
+import Sellers from './screens/chat/Sellers';
+import ChatRoom from './screens/chat/ChatRoom'
 import Toast from 'react-native-toast-message';
 import { View, Text, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -117,6 +119,8 @@ export default function App() {
           <Stack.Screen name="RateService" component={RateService} />
           <Stack.Screen name="ThankYou" component={Thanks} />
           <Stack.Screen name="Notifications" component={Notifications} />
+          <Stack.Screen name="Sellers" component={Sellers} />
+          <Stack.Screen name="ChatRoom" component={ChatRoom} />
         </Stack.Navigator>
       </NavigationContainer>
       <Toast config={toastConfig} />
